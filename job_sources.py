@@ -11,8 +11,6 @@ import requests
 from bs4 import BeautifulSoup
 
 from config import JOB_COLUMNS
-from scraper import search_indeed
-
 JOB_FIELDS = set(JOB_COLUMNS)
 
 
@@ -40,15 +38,6 @@ def _normalize_job(job: dict, default_source: str) -> dict:
             normalized[key] = job.get(key)
     normalized["source"] = job.get("source") or default_source
     return normalized
-
-
-class IndeedJobSource:
-    source_id = "indeed"
-    label = "Indeed (スクレイピング)"
-
-    def search(self, query: JobSearchQuery) -> list[dict]:
-        rows = search_indeed(query.keyword, query.location, pages=int(query.pages or 1))
-        return [_normalize_job(r, "indeed") for r in rows]
 
 
 class SampleCsvJobSource:
@@ -175,9 +164,7 @@ class CompanySiteJobSource:
 
 
 _SOURCES: dict[str, JobSource] = {
-    IndeedJobSource.source_id: IndeedJobSource(),
     SampleCsvJobSource.source_id: SampleCsvJobSource(),
-    CompanySiteJobSource.source_id: CompanySiteJobSource(),
 }
 
 

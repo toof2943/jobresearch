@@ -11,7 +11,7 @@ from job_sources import JobSearchQuery, list_sources, search_jobs_with_sources
 load_dotenv(Path(__file__).resolve().parent.parent / ".env", override=True)
 
 st.set_page_config(page_title="求人検索", page_icon="🔎", layout="wide")
-st.title("求人検索（ソースアダプター）")
+st.title("求人検索（非スクレイピング）")
 
 if "search_results" not in st.session_state:
     st.session_state.search_results = []
@@ -57,7 +57,7 @@ st.markdown("---")
 source_options = list_sources()
 source_ids = [sid for sid, _ in source_options]
 source_label_to_id = {label: sid for sid, label in source_options}
-default_labels = [label for sid, label in source_options if sid in ("company_site", "csv_seed")]
+default_labels = [label for sid, label in source_options if sid in ("csv_seed",)]
 
 selected_labels = st.multiselect(
     "検索ソース",
@@ -65,29 +65,16 @@ selected_labels = st.multiselect(
     default=default_labels,
 )
 selected_sources = [source_label_to_id[label] for label in selected_labels]
-
-col_pages, col_csv = st.columns(2)
-with col_pages:
-    max_pages = st.number_input("検索ページ数（スクレイピング系）", min_value=1, max_value=5, value=2)
-with col_csv:
-    csv_path = st.text_input("CSVソースパス", value="data/sample_jobs.csv")
-
-company_sites_input = ""
-if "company_site" in selected_sources:
-    company_sites_input = st.text_area(
-        "企業公式サイトURL（1行1件）",
-        placeholder="https://corp.example.com/recruit\nhttps://another.example.jp/careers",
-        height=120,
-    )
+csv_path = st.text_input("CSVソースパス", value="data/sample_jobs.csv")
 
 if st.button("選択ソースで検索", type="primary", disabled=(not keyword or not selected_sources)):
     with st.spinner(f"「{keyword}」で検索中..."):
         query = JobSearchQuery(
             keyword=keyword,
             location=location,
-            pages=max_pages,
+            pages=1,
             csv_path=csv_path,
-            company_sites=[line.strip() for line in company_sites_input.splitlines() if line.strip()],
+            company_sites=[],
         )
         results, errors = search_jobs_with_sources(query, selected_sources)
         st.session_state.search_results = results
